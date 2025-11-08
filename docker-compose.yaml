@@ -1,0 +1,74 @@
+services:
+  trading_app:
+    build: .
+    container_name: trading_api
+    restart: always
+    expose:
+      - 8000
+    depends_on:
+      trading_db:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: "trading_user"
+      POSTGRES_PASSWORD: "secure_password_2024"
+      ACCESS_TOKEN_EXPIRE_MINUTES: 999999
+      POSTGRES_HOST: trading_db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "trading_platform_db"
+      SECRET_KEY: "ultra-secret-key"
+      JWT_ALGORITHM: "HS256"
+      BASE_INSTRUMENT_TICKER: "RUB"
+
+  trading_migrations:
+    build: .
+    container_name: trading_migrations
+    depends_on:
+      trading_db:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: "trading_user"
+      POSTGRES_PASSWORD: "secure_password_2024"
+      POSTGRES_HOST: trading_db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "trading_platform_db"
+    command: >
+      sh -c "alembic revision --autogenerate && alembic upgrade head"
+    volumes:
+      - trading_alembic:/app/alembic/versions
+
+  trading_db:
+    image: postgres:16-alpine
+    container_name: trading_database
+    environment:
+      POSTGRES_USER: trading_user
+      POSTGRES_PASSWORD: secure_password_2024
+      POSTGRES_DB: trading_platform_db
+    expose:
+      - 5432
+    ports:
+      - "5433:5432"
+    volumes:
+      - trading_data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trading_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  trading_nginx:
+    image: nginx:latest
+    container_name: trading_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "5432:5432"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - trading_app
+
+volumes:
+  trading_alembic:
+  trading_data:
+
