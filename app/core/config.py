@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     # API settings
     api_v1_prefix: str = "/api/v1"
     token_prefix: str = "TOKEN"
+    
+    # Logging
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
     @property
     def database_url(self) -> str:
