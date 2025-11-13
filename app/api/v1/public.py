@@ -76,9 +76,10 @@ async def get_instruments(
     """
     repo = InstrumentRepository(db)
     instruments = await repo.get_all()
-    return [
-        InstrumentResponse(name=i.name, ticker=i.ticker) for i in instruments
-    ]
+    return sorted(
+        [InstrumentResponse(name=i.name, ticker=i.ticker) for i in instruments],
+        key=lambda x: x.ticker,
+    )
 
 
 @router.get("/orderbook/{ticker}", response_model=OrderbookResponse)
