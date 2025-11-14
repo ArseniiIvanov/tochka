@@ -21,7 +21,7 @@ settings = get_settings()
 
 
 class OrderService:
-    """Service for order operations."""
+    """Service for managing trading orders and execution."""
 
     def __init__(self, session: AsyncSession):
         """
